@@ -649,6 +649,66 @@ def tiny_vit_5m_224(pretrained=False, **kwargs):
     model_kwargs.update(kwargs)
     return _create_tiny_vit('tiny_vit_5m_224', pretrained, **model_kwargs)
 
+@register_model
+def tiny_vit_custom(pretrained=False, **kwargs):
+    model_kwargs = dict(
+        embed_dims=[128, 128, 240, 320],
+        depths=[2, 2, 6, 2],
+        num_heads=[2, 4, 5, 10],
+        window_sizes=[7, 7, 14, 7],
+        drop_path_rate=0.1,
+        in_chans=1,
+        img_size=(96, 96),
+        pretrained_type='22k_distill'
+    )
+    model_kwargs.update(kwargs)
+    m = _create_tiny_vit2('tiny_vit_custom', pretrained, **model_kwargs)
+    from model.reconstruction_head import ReconstructionHead
+    m.head = ReconstructionHead(patch_size=96)
+    return m
+
+
+def _create_tiny_vit2(variant, pretrained=False, **kwargs):
+    # pretrained_type: 22kto1k_distill, 1k, 22k_distill
+    pretrained_type = kwargs.pop('pretrained_type', '22kto1k_distill')
+    assert pretrained_type in ['22kto1k_distill', '1k', '22k_distill'], \
+        'pretrained_type should be one of 22kto1k_distill, 1k, 22k_distill'
+
+    # img_size = kwargs.get('img_size', 224)
+    # if img_size != 224:
+    #     pretrained_type = pretrained_type.replace('_', f'_{img_size}_')
+
+    num_classes_pretrained = 21841 if \
+        pretrained_type  == '22k_distill' else 1000
+
+    variant_without_img_size = '_'.join(variant.split('_')[:-1])
+    cfg = dict(
+        url=_checkpoint_url_format.format(
+            f'{variant_without_img_size}_{pretrained_type}'),
+        num_classes=num_classes_pretrained,
+        classifier='head',
+    )
+
+    def _pretrained_filter_fn(state_dict):
+        state_dict = state_dict['model']
+        # filter out attention_bias_idxs
+        state_dict = {k: v for k, v in state_dict.items() if \
+            not k.endswith('attention_bias_idxs')}
+        return state_dict
+
+    if timm.__version__ >= "0.6":
+        return build_model_with_cfg(
+            TinyViT, variant, pretrained,
+            pretrained_cfg=cfg,
+            pretrained_filter_fn=_pretrained_filter_fn,
+            **kwargs)
+    else:
+        return build_model_with_cfg(
+            TinyViT, variant, pretrained,
+            default_cfg=cfg,
+            pretrained_filter_fn=_pretrained_filter_fn,
+            **kwargs)
+
 
 @register_model
 def tiny_vit_11m_224(pretrained=False, **kwargs):
