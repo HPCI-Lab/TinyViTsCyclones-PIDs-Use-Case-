@@ -1,5 +1,5 @@
 
-WEIGHTS_PATH = "weights"
-DATA_PATH = "data"
+WEIGHTS_PATH = "TinyViTsCyclones-PIDs-Use-Case-/weights"
+DATA_PATH = "TinyViTsCyclones-PIDs-Use-Case-/data"
 
-DEVICE = "mps"
+DEVICE = "cuda"

@@ -652,11 +652,11 @@ def tiny_vit_5m_224(pretrained=False, **kwargs):
 @register_model
 def tiny_vit_custom(pretrained=False, **kwargs):
     model_kwargs = dict(
-        embed_dims=[128, 128, 240, 320],
+        embed_dims=[96, 192, 384, 576],
         depths=[2, 2, 6, 2],
-        num_heads=[2, 4, 5, 10],
+        num_heads=[3, 6, 12, 18],
         window_sizes=[7, 7, 14, 7],
-        drop_path_rate=0.1,
+        drop_path_rate=0.2,
         in_chans=1,
         img_size=(96, 96),
         pretrained_type='22k_distill'
@@ -664,7 +664,7 @@ def tiny_vit_custom(pretrained=False, **kwargs):
     model_kwargs.update(kwargs)
     m = _create_tiny_vit2('tiny_vit_custom', pretrained, **model_kwargs)
     from model.reconstruction_head import ReconstructionHead
-    m.head = ReconstructionHead(patch_size=96)
+    m.head = ReconstructionHead(in_features=576, patch_size=96)
     return m
 
 

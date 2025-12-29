@@ -15,7 +15,7 @@ from model import tiny_vit
 from consts import WEIGHTS_PATH, DEVICE
 from climate_datasets.era5 import Era5Dataset
 
-EPOCHS = 6
+EPOCHS = 25
 
 def main(): 
 
@@ -25,8 +25,8 @@ def main():
     # model = torch.load(model_path, weights_only=False)
 
     train_dataset = Era5Dataset(split="train", patch_size=96)
-    train_dataset = Subset(train_dataset, range(64*75))
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    # train_dataset = Subset(train_dataset, range(64*75))
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
     criterion = MSELoss().to(DEVICE)
     optimizer = Adam(model.parameters(), lr=0.0001)
@@ -57,8 +57,7 @@ def main():
         y = y.unsqueeze(1).to(DEVICE)
 
         y_hat, _ = model(X)
-        y_hat = (y_hat.detach().cpu().numpy().squeeze() * train_dataloader.dataset.dataset.MAX) + train_dataloader.dataset.dataset.MIN
-        np.savetxt("foo.csv", y_hat[0], delimiter=",")
+        y_hat = (y_hat.detach().cpu().numpy().squeeze() * train_dataloader.dataset.MAX) + train_dataloader.dataset.MIN
 
         plt.imshow(X[0].detach().cpu().numpy().squeeze())
         plt.savefig(f"in_{i}.png")
@@ -67,7 +66,7 @@ def main():
         plt.savefig(f"out_{i}.png")
         plt.close()
 
-    model_path = os.path.join(WEIGHTS_PATH, "tiny_vit_5m_224_finetuned.pt")
+    model_path = os.path.join(WEIGHTS_PATH, "tiny_vit_5m_224_pretrained.pt")
     torch.save(model, model_path)
 
 if __name__ == "__main__": 
