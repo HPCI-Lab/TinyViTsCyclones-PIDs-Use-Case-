@@ -1,0 +1,10 @@
+requests
+yprov4ml
+tqdm
+pandas
+cfgrib
+xarray
+matplotlib
+geopandas
+torch
+timm

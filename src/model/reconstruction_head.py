@@ -9,6 +9,16 @@ class ReconstructionHead(nn.Module):
 
     def forward(self, x):
         # x: [B, 320]
-        x = self.fc(x)                 # [B, 1024]
+        x = self.fc(x) # [B, 1024]
         x = x.view(x.size(0), 1, self.patch_size, self.patch_size)
+        return x
+    
+class ClassificationHead(nn.Module):
+    def __init__(self, in_features=320, out_features=1):
+        super().__init__()
+        self.fc = nn.Linear(in_features, out_features)
+
+    def forward(self, x):
+        x = self.fc(x)
+        x = F.sigmoid(x)
         return x

@@ -650,7 +650,7 @@ def tiny_vit_5m_224(pretrained=False, **kwargs):
     return _create_tiny_vit('tiny_vit_5m_224', pretrained, **model_kwargs)
 
 @register_model
-def tiny_vit_custom(pretrained=False, **kwargs):
+def tiny_vit_c_large(pretrained=False, **kwargs):
     model_kwargs = dict(
         embed_dims=[96, 192, 384, 576],
         depths=[2, 2, 6, 2],
@@ -662,13 +662,12 @@ def tiny_vit_custom(pretrained=False, **kwargs):
         pretrained_type='22k_distill'
     )
     model_kwargs.update(kwargs)
-    m = _create_tiny_vit2('tiny_vit_custom', pretrained, **model_kwargs)
+    m = _create_tiny_vit_custom('tiny_vit_custom', pretrained, **model_kwargs)
     from model.reconstruction_head import ReconstructionHead
     m.head = ReconstructionHead(in_features=576, patch_size=96)
     return m
 
-
-def _create_tiny_vit2(variant, pretrained=False, **kwargs):
+def _create_tiny_vit_custom(variant, pretrained=False, **kwargs):
     # pretrained_type: 22kto1k_distill, 1k, 22k_distill
     pretrained_type = kwargs.pop('pretrained_type', '22kto1k_distill')
     assert pretrained_type in ['22kto1k_distill', '1k', '22k_distill'], \
