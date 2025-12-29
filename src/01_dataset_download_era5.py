@@ -7,17 +7,19 @@ import yprov4ml
 
 from consts import DATA_PATH
 
-def download_file(url, local_filename):
-    # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192): 
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                #if chunk: 
+def save_response_content(response, destination):
+    CHUNK_SIZE = 32768
+    with open(destination, "wb") as f:
+        for chunk in tqdm(response.iter_content(CHUNK_SIZE)):
+            if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
-    return local_filename
+
+def get_confirm_token(response):
+    for key, value in response.cookies.items():
+        if key.startswith("download_warning"):
+            return value
+
+    return None
 
 def main(): 
     yprov4ml.start_run(
@@ -28,10 +30,20 @@ def main():
 
     start_year = 2020
     end_year = 2022
-    era5_url = "https://drive.usercontent.google.com/download?id=1uDxTZixWV1EHlSMYFSk7SoZ52f0MuQAE&export=download&authuser=1"
-    era5_path = os.path.join(DATA_PATH, "era5")
+    era5_url = "https://drive.usercontent.google.com/download?id=1uDxTZixWV1EHlSMYFSk7SoZ52f0MuQAE&export=download&confirm=1"
+    era5_path = os.path.join(DATA_PATH, "data.grib")
+    file_id = "1uDxTZixWV1EHlSMYFSk7SoZ52f0MuQAE"
 
-    era5_path = download_file(era5_url, era5_path)
+    session = requests.Session()
+
+    response = session.get(era5_url, params={"id": file_id}, stream=True)
+    token = get_confirm_token(response)
+
+    if token:
+        params = {"id": file_id, "confirm": token}
+        response = session.get(era5_url, params=params, stream=True)
+
+    save_response_content(response, era5_path)
 
     yprov4ml.log_param("start_year", start_year)
     yprov4ml.log_param("end_year", end_year)

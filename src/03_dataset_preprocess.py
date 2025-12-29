@@ -21,10 +21,9 @@ def main():
     ibtracs_path = os.path.join(DATA_PATH, "ibtracs.since1980.list.v04r01.csv")
     ibtracs = pd.read_csv(ibtracs_path, low_memory=False)
     ibtracs = ibtracs[ibtracs["SEASON"].isin([2020, 2021])]
-    print(len(ibtracs))
 
-    # if not working then install via conda: conda install -c conda-forge cfgrib
     era5_path = os.path.join(DATA_PATH, "data.grib")
+    # if not working then install via conda: conda install -c conda-forge cfgrib
     era5 = xr.open_dataset(era5_path, engine="cfgrib") #(8768, 121, 161)
     print(era5)
 
