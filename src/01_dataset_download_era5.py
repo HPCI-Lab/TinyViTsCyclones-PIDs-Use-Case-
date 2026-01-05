@@ -34,16 +34,17 @@ def main():
     era5_path = os.path.join(DATA_PATH, "data.grib")
     file_id = "1uDxTZixWV1EHlSMYFSk7SoZ52f0MuQAE"
 
-    session = requests.Session()
+    if not os.path.exists(era5_path): 
+        session = requests.Session()
 
-    response = session.get(era5_url, params={"id": file_id}, stream=True)
-    token = get_confirm_token(response)
+        response = session.get(era5_url, params={"id": file_id}, stream=True)
+        token = get_confirm_token(response)
 
-    if token:
-        params = {"id": file_id, "confirm": token}
-        response = session.get(era5_url, params=params, stream=True)
+        if token:
+            params = {"id": file_id, "confirm": token}
+            response = session.get(era5_url, params=params, stream=True)
 
-    save_response_content(response, era5_path)
+        save_response_content(response, era5_path)
 
     yprov4ml.log_param("start_year", start_year)
     yprov4ml.log_param("end_year", end_year)

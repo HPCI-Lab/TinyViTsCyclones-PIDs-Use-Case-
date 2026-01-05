@@ -2,3 +2,5 @@ data
 weights
 prov
 __pycache__
+examples
+.DS_Store
