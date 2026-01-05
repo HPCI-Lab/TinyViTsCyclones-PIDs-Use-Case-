@@ -4,24 +4,28 @@ import os
 import yprov4ml
 from torch.utils.data import DataLoader
 from torch.nn import CrossEntropyLoss
+import argparse
+import yaml
+from tqdm import tqdm
 
-from model import tiny_vit
 from consts import WEIGHTS_PATH, DEVICE
 from climate_datasets.era5 import Era5Dataset
 
-def main(): 
+def main(yaml_file_path): 
+
+    configs = yaml.safe_load(open(yaml_file_path, mode="rb"))
+
     yprov4ml.start_run(
-        experiment_name="evaluate_pretrained", 
+        experiment_name=f"evaluate_pretrain_{configs["model_size"]}", 
         provenance_save_dir="prov",
         disable_codecarbon=True
     )
 
-    test_dataset = Era5Dataset(split="test")
-    test_dataloader = DataLoader(test_dataset)
+    test_dataset = Era5Dataset(split="test", patch_size=96)
+    test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=True)
 
-    model = tiny_vit.tiny_vit_5m_224(pretrained=False)
-    model_path = os.path.join(WEIGHTS_PATH, "tiny_vit_5m_224_pretrained.pt")
-    torch.load(model, model_path).to(DEVICE)
+    model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_pretrained.pt")
+    model = torch.load(model_path, weights_only=False).to(DEVICE)
 
     criterion = CrossEntropyLoss().to(DEVICE)
 
@@ -30,11 +34,11 @@ def main():
     total = 0
 
     with torch.no_grad():
-        for X, y in test_dataloader:
-            X = X.to(DEVICE)
-            y = y.to(DEVICE)
+        for X, y in tqdm(test_dataloader):
+            X = X.unsqueeze(1).to(DEVICE)
+            y = y.unsqueeze(1).to(DEVICE)
 
-            logits = model(X)
+            logits, _ = model(X)
             loss = criterion(logits, y)
 
             total += X.size(0)
@@ -47,3 +51,9 @@ def main():
     yprov4ml.log_param("total_samples", total)
 
     yprov4ml.end_run(True, True, False)
+
+if __name__ == "__main__": 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('yaml')
+    args = parser.parse_args()
+    main(args.yaml)

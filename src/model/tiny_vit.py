@@ -650,6 +650,42 @@ def tiny_vit_5m_224(pretrained=False, **kwargs):
     return _create_tiny_vit('tiny_vit_5m_224', pretrained, **model_kwargs)
 
 @register_model
+def tiny_vit_c_small(pretrained=False, **kwargs):
+    model_kwargs = dict(
+        embed_dims=[64, 128, 160, 320],
+        depths=[2, 2, 6, 2],
+        num_heads=[2, 4, 5, 10],
+        window_sizes=[7, 7, 14, 7],
+        drop_path_rate=0.0,
+        in_chans=1,
+        img_size=(96, 96),
+        pretrained_type='22k_distill'
+    )
+    model_kwargs.update(kwargs)
+    m = _create_tiny_vit_custom('tiny_vit_c_small', pretrained, **model_kwargs)
+    from model.reconstruction_head import ReconstructionHead
+    m.head = ReconstructionHead(in_features=320, patch_size=96)
+    return m
+
+@register_model
+def tiny_vit_c_medium(pretrained=False, **kwargs):
+    model_kwargs = dict(
+        embed_dims=[64, 128, 256, 448],
+        depths=[2, 2, 6, 2],
+        num_heads=[2, 4, 8, 14],
+        window_sizes=[7, 7, 14, 7],
+        drop_path_rate=0.1,
+        in_chans=1,
+        img_size=(96, 96),
+        pretrained_type='22k_distill'
+    )
+    model_kwargs.update(kwargs)
+    m = _create_tiny_vit_custom('tiny_vit_c_medium', pretrained, **model_kwargs)
+    from model.reconstruction_head import ReconstructionHead
+    m.head = ReconstructionHead(in_features=448, patch_size=96)
+    return m
+
+@register_model
 def tiny_vit_c_large(pretrained=False, **kwargs):
     model_kwargs = dict(
         embed_dims=[96, 192, 384, 576],
@@ -662,7 +698,7 @@ def tiny_vit_c_large(pretrained=False, **kwargs):
         pretrained_type='22k_distill'
     )
     model_kwargs.update(kwargs)
-    m = _create_tiny_vit_custom('tiny_vit_custom', pretrained, **model_kwargs)
+    m = _create_tiny_vit_custom('tiny_vit_c_large', pretrained, **model_kwargs)
     from model.reconstruction_head import ReconstructionHead
     m.head = ReconstructionHead(in_features=576, patch_size=96)
     return m

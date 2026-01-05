@@ -42,7 +42,7 @@ class Era5CycloneDataset(Dataset):
         # ---------------- IBTrACS ----------------
 
         self.ibtracs = pd.read_csv(
-            "./TinyViTsCyclones-PIDs-Use-Case-/data/ibtracs.since1980.list.v04r01.csv",
+            "./data/ibtracs.since1980.list.v04r01.csv",
             parse_dates=["ISO_TIME"],
             usecols=["ISO_TIME", "LAT", "LON"],
         )

@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
+import argparse
+import yaml
 
 from model.reconstruction_head import ClassificationHead 
 from consts import WEIGHTS_PATH, DEVICE
@@ -14,17 +16,26 @@ from climate_datasets.era5_cyclone import Era5CycloneDataset
 
 EPOCHS = 1
 
-def main(): 
+def main(yaml_file_path): 
+
+    configs = yaml.safe_load(open(yaml_file_path, mode="rb"))
+
     yprov4ml.start_run(
-        experiment_name="pretrained_finetune", 
+        experiment_name=f"model_finetune_{configs["model_size"]}", 
         provenance_save_dir="prov",
         disable_codecarbon=True
     )
 
     # model = tiny_vit.tiny_vit_custom(pretrained=False)
-    model_path = os.path.join(WEIGHTS_PATH, "tiny_vit_5m_224_pretrained.pt")
+    model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_pretrained.pt")
     model = torch.load(model_path, weights_only=False)
-    model.head = ClassificationHead(576, 1)
+    if configs["model_size"] == "small": 
+        model.head = ClassificationHead(320, 1)
+    elif configs["model_size"] == "medium": 
+        model.head = ClassificationHead(448, 1)
+    elif configs["model_size"] == "medium": 
+        model.head = ClassificationHead(576, 1)
+    
     model = model.to(DEVICE)
 
     train_dataset = Era5CycloneDataset(split="train", patch_size=96)
@@ -46,10 +57,13 @@ def main():
             loss.backward()
             optimizer.step()
 
-    model_path = os.path.join(WEIGHTS_PATH, "tiny_vit_5m_224_finetuned.pt")
+    model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_finetuned.pt")
     torch.save(model, model_path)
 
     yprov4ml.end_run(True, True, False)
 
 if __name__ == "__main__": 
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('yaml')
+    args = parser.parse_args()
+    main(args.yaml)
