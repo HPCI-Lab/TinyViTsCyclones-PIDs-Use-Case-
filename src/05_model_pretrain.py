@@ -13,7 +13,7 @@ import argparse
 import yaml
 
 from model import tiny_vit
-from consts import WEIGHTS_PATH, DEVICE, IMGS_PATH
+from consts import WEIGHTS_PATH, DEVICE, IMGS_PATH, DATA_PATH
 from climate_datasets.era5 import Era5Dataset
 from model.reconstruction_head import ReconstructionHead
 
@@ -37,6 +37,9 @@ def main(yaml_file_path):
         model = tiny_vit.tiny_vit_c_large(pretrained=False).to(DEVICE)
     model.train()
 
+    era5_path = os.path.join(DATA_PATH, "data.grib")
+    yprov4ml.log_artifact("era5_path", era5_path, is_input=True)
+
     train_dataset = Era5Dataset(split="train", patch_size=96)
     train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
@@ -58,15 +61,15 @@ def main(yaml_file_path):
             loss.backward()
             optimizer.step()
 
-    plt.plot(losses)
-    pth = os.path.join(IMGS_PATH, f"losses_{configs["model_size"]}.png")
-    plt.savefig(pth)
-    plt.close()
-    yprov4ml.log_artifact(f"losses_{configs["model_size"]}", pth)
+    # plt.plot(losses)
+    # pth = os.path.join(IMGS_PATH, f"losses_{configs["model_size"]}_pretrain.png")
+    # plt.savefig(pth)
+    # plt.close()
+    # yprov4ml.log_artifact(f"losses_{configs["model_size"]}_pretrain", pth, is_input=False)
 
     model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_pretrained.pt")
     torch.save(model, model_path)
-    yprov4ml.log_model(f"tiny_vit_{configs["model_size"]}_pretrained", model)
+    yprov4ml.log_model(f"tiny_vit_{configs["model_size"]}_pretrained", model, is_input=False, context=None)
 
     yprov4ml.end_run(True, True, False)
 

@@ -8,7 +8,7 @@ import argparse
 import yaml
 from tqdm import tqdm
 
-from consts import WEIGHTS_PATH, DEVICE
+from consts import WEIGHTS_PATH, DEVICE, DATA_PATH
 from climate_datasets.era5 import Era5Dataset
 
 def main(yaml_file_path): 
@@ -21,11 +21,18 @@ def main(yaml_file_path):
         disable_codecarbon=True
     )
 
+    era5_path = os.path.join(DATA_PATH, "data.grib")
+    yprov4ml.log_artifact("era5_path", era5_path, is_input=True)
+
     test_dataset = Era5Dataset(split="test", patch_size=96)
     test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=True)
 
     model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_pretrained.pt")
     model = torch.load(model_path, weights_only=False).to(DEVICE)
+
+    # model_path = os.path.join(WEIGHTS_PATH, f"tiny_vit_{configs["model_size"]}_finetuned.pt")
+    # torch.save(model, model_path)
+    yprov4ml.log_model(f"tiny_vit_{configs["model_size"]}_pretrained", model, is_input=True, context=None)
 
     criterion = CrossEntropyLoss().to(DEVICE)
 

@@ -7,9 +7,9 @@ check_step () {
     fi
 }
 
-pip install -r requirements.txt
-check_step "pip install"
-echo "✅ pip install completed successfully!"
+# pip install -r requirements.txt
+# check_step "pip install"
+# echo "✅ pip install completed successfully!"
 
 # conda install -c conda-forge cfgrib
 # check_step "cfgrib install"
